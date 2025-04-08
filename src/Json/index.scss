@@ -1,0 +1,114 @@
+.app-container {
+    font-family: sans-serif;
+    padding: 20px;
+  
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+  
+    form {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+  
+    fieldset {
+      margin-bottom: 20px;
+      padding: 10px;
+      border: 0px solid #ccc;
+      border-radius: 5px;
+  
+      legend {
+        font-weight: bold;
+        padding: 5px 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        background-color: #f0f0f0;
+      }
+    }
+  
+    .form-group {
+      margin-bottom: 10px;
+  
+      label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+      }
+  
+      input[type="text"] {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        box-sizing: border-box; 
+      }
+
+      img{
+        width: 48px;
+        height: 48px;
+      }
+    }
+  
+    .event-container {
+      border: 2px solid #000000;
+      padding: 10px;
+      margin-bottom: 30px;
+      border-radius: 5px;
+      background-color: #f9f9f9;
+  
+      h3 {
+        margin-top: 0;
+        margin-bottom: 10px;
+        text-align: center;
+      }
+    }
+  
+    button {
+      background-color: #4CAF50;
+      color: white;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      display: block;
+      margin: 20px auto;
+  
+      &:hover {
+        background-color: #3e8e41;
+      }
+    }
+  
+    h2 {
+      margin-top: 30px;
+      text-align: center;
+    }
+
+    .suggestions {
+      position: absolute;
+      background: white;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      max-height: 200px;
+      overflow-y: auto;
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      width: 100%;
+      z-index: 1000;
+    }
+    
+    .suggestion-item {
+      padding: 8px;
+      cursor: pointer;
+      
+      &:hover {
+        background-color: #f0f0f0;
+      }
+    }
+    
+    .form-group {
+      position: relative;
+    }
+  }
