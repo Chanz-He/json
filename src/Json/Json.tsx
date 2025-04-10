@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState} from 'react';
 import { saveAs } from 'file-saver';
 import moment from 'moment-timezone';
 import './index.scss';
-import { imageUrlArr, LogoArr } from './Arrays.js';
+import { imageUrlArr, LogoArr } from './Arrays.tsx';
+import swpPng from '../images/swp.png';
 
 function Json() {
   const initialData = {
@@ -32,6 +33,7 @@ function Json() {
   const [eventsData, setEventsData] = useState(Array(10).fill(null).map(() => ({ ...initialEvent })));
   const [imageSuggestions, setImageSuggestions] = useState([]);
   const [logoSuggestions, setLogoSuggestions] = useState({});
+  const [tempContent, setTempContent] = useState({});
 
   const handleChange = (path, value) => {
     setData(prevData => {
@@ -64,16 +66,32 @@ function Json() {
             current = current[path_array[j]];
           }
 
-          // 特殊处理 content 字段
-          if (path === 'content') {
-            // 检查字符串是否以英文句号结尾
-            if (value.endsWith('.')) {
-              // 在末尾添加 <br/><br/>
-              value = value + '<br/><br/>';
+          if (path === 'left.logo') {
+            if (value === 'https://cdn.zarlk.com/swipooor/images/events/event3/No.png') {
+              newEvent.left.name = 'No';
+            } else if (value === 'https://cdn.zarlk.com/swipooor/images/events/event3/Under.png') {
+              newEvent.left.name = 'Under';
             }
           }
 
-          current[path_array[path_array.length - 1]] = value;
+          if (path === 'right.logo') {
+            if (value === 'https://cdn.zarlk.com/swipooor/images/events/event3/Yes.png') {
+              newEvent.right.name = 'Yes';
+            } else if (value === 'https://cdn.zarlk.com/swipooor/images/events/event3/Over.png') {
+              newEvent.right.name = 'Over';
+            }
+          }
+
+          if (path === 'content' && value) {
+            if (!newEvent.content) {
+              current[path_array[path_array.length - 1]] = value;
+            } else {
+              current[path_array[path_array.length - 1]] = `${newEvent.content}<br/><br/>${value}`;
+            }
+          } else if (path !== 'content') {
+            current[path_array[path_array.length - 1]] = value;
+          }
+
           return newEvent;
         } else {
           return event;
@@ -86,6 +104,7 @@ function Json() {
       handleLogoSearch(index, path, value);
     }
   };
+
 
   const handleEndAtChange = (value) => {
     try {
@@ -106,10 +125,9 @@ function Json() {
 
   const handleImageSearch = (value) => {
     if (!value) {
-      setImageSuggestions([]);
+      setImageSuggestions(imageUrlArr);
       return;
     }
-
     const filteredSuggestions = imageUrlArr.filter(link =>
       link.toLowerCase().includes(value.toLowerCase())
     );
@@ -118,14 +136,19 @@ function Json() {
 
   const handleLogoSearch = (index, path, value) => {
     if (!value) {
-      setLogoSuggestions(prev => ({ ...prev, [`${index}-${path}`]: [] }));
+      setLogoSuggestions(prev => ({
+        ...prev,
+        [`${index}-${path}`]: LogoArr
+      }));
       return;
     }
-
     const filteredSuggestions = LogoArr.filter(link =>
       link.toLowerCase().includes(value.toLowerCase())
     );
-    setLogoSuggestions(prev => ({ ...prev, [`${index}-${path}`]: filteredSuggestions }));
+    setLogoSuggestions(prev => ({
+      ...prev,
+      [`${index}-${path}`]: filteredSuggestions
+    }));
   };
 
   const handleSuggestionClick = (suggestion) => {
@@ -138,18 +161,124 @@ function Json() {
     setLogoSuggestions(prev => ({ ...prev, [`${index}-${path}`]: [] }));
   };
 
+  const handleStarClick = (index, rating) => {
+    setEventsData(prevEvents => {
+      const newEvents = [...prevEvents];
+      newEvents[index] = {
+        ...newEvents[index],
+        star: rating
+      };
+      return newEvents;
+    });
+  };
+
   const handleDownload = (e) => {
     e.preventDefault();
-    const filteredEvents = eventsData.filter(event => event.title !== "");
+
+    const incompleteEvents = eventsData
+      .map((event, index) => {
+        const fields = {
+          title: event.title,
+          content: event.content,
+          star: event.star,
+          'left.name': event.left.name,
+          'left.logo': event.left.logo,
+          'right.name': event.right.name,
+          'right.logo': event.right.logo
+        };
+
+        const filledFields = Object.entries(fields).filter(([key, value]) => {
+          if (key === 'star') {
+            return value !== null && value !== undefined;
+          }
+          return value !== "" && value !== null && value !== undefined;
+        }).length;
+
+        const isCompletelyEmpty = filledFields === 0;
+        const isCompletelyFilled = filledFields === Object.keys(fields).length;
+
+        if (!isCompletelyEmpty && !isCompletelyFilled) {
+          return index + 1;
+        }
+        return null;
+      })
+      .filter(index => index !== null);
+
+    if (incompleteEvents.length > 0) {
+      const eventNumbers = incompleteEvents.join(', ');
+      alert(`Not completed: Event ${eventNumbers}`);
+      return;
+    }
+
+    const filteredEvents = eventsData.filter(event => {
+      const fields = [
+        event.title,
+        event.content,
+        event.star,
+        event.left.name,
+        event.left.logo,
+        event.right.name,
+        event.right.logo
+      ];
+      return fields.some(field => field !== "" && field !== null && field !== undefined);
+    });
+
     const jsonData = {
       ...data,
       events: filteredEvents
     };
+
     const jsonString = JSON.stringify(jsonData, null, 2);
     const blob = new Blob([jsonString], { type: 'application/json' });
     saveAs(blob, 'data.json');
     window.location.reload();
     window.scrollTo(0, 0);
+  };
+
+  const handleImageFocus = () => {
+    if (!data.image) {
+      setImageSuggestions(imageUrlArr);
+    }
+  };
+
+  const handleImageBlur = () => {
+    setTimeout(() => {
+      setImageSuggestions([]);
+    }, 150);
+  };
+
+  const handleLogoFocus = (index, path) => {
+    const currentValue = path === 'left.logo' ? eventsData[index].left.logo : eventsData[index].right.logo;
+    if (!currentValue) {
+      setLogoSuggestions(prev => ({
+        ...prev,
+        [`${index}-${path}`]: LogoArr
+      }));
+    }
+  };
+
+  const handleLogoBlur = (index, path) => {
+    setTimeout(() => {
+      setLogoSuggestions(prev => ({
+        ...prev,
+        [`${index}-${path}`]: []
+      }));
+    }, 150);
+  };
+  const handleDeleteSentence = (eventIndex, sentenceIndex) => {
+    setEventsData(prevEvents => {
+      const newEvents = prevEvents.map((event, i) => {
+        if (i === eventIndex) {
+          const newEvent = JSON.parse(JSON.stringify(event));
+          const sentences = newEvent.content ? newEvent.content.split('<br/><br/>') : [];
+          sentences.splice(sentenceIndex, 1);
+          newEvent.content = sentences.length > 0 ? sentences.join('<br/><br/>') : '';
+          return newEvent;
+        }
+        return event;
+      });
+      return newEvents;
+    });
   };
 
   return (
@@ -187,7 +316,7 @@ function Json() {
             >
               <option value="solana">solana</option>
               <option value="abstract">abstract</option>
-            </select> 
+            </select>
           </div>
           <div className="form-group">
             <label htmlFor="category">Category:</label>
@@ -202,7 +331,7 @@ function Json() {
           <div className="form-group">
             <label htmlFor="image">Image URL:</label>
             <div className='img'>
-              <img src={data.image} alt="" />
+              <img src={data.image ? data.image : swpPng} alt="" />
             </div>
             <input
               type="text"
@@ -210,17 +339,21 @@ function Json() {
               value={data.image}
               onChange={e => handleChange('image', e.target.value)}
               autoComplete="off"
+              onFocus={handleImageFocus}
+              onBlur={handleImageBlur}
             />
             {imageSuggestions.length > 0 && (
               <ul className="suggestions">
                 {imageSuggestions.map((suggestion, index) => (
-                  <li
-                    key={index}
-                    onClick={() => handleSuggestionClick(suggestion)}
-                    className="suggestion-item"
-                  >
-                    {suggestion}
-                  </li>
+                  <div className='imglink' key={index}>
+                    <img src={suggestion} alt="" />
+                    <li
+                      onClick={() => handleSuggestionClick(suggestion)}
+                      className="suggestion-item"
+                    >
+                      {suggestion}
+                    </li>
+                  </div>
                 ))}
               </ul>
             )}
@@ -256,22 +389,76 @@ function Json() {
                 <input
                   type="text"
                   id={`event-${index}-content`}
-                  value={event.content}
-                  onChange={e => handleEventChange(index, 'content', e.target.value)}
+                  value={tempContent[index] || ''}
+                  onChange={e => {
+                    const inputValue = e.target.value;
+                    setTempContent(prev => ({ ...prev, [index]: inputValue }));
+                    if (inputValue) {
+                      handleEventChange(index, 'content', inputValue.trim());
+                      setTempContent(prev => ({ ...prev, [index]: '' })); // 清空输入框
+                    }
+                  }}
                   autoComplete="off"
+                  placeholder="输入一句，自动生成"
                 />
+                <div>
+                  {event.content ? event.content.split('<br/><br/>').map((sentence, idx) => (
+                    <div className='content-preview1' key={idx}>
+                      <div>{sentence}</div>
+                      <div
+                        className='x'
+                        onClick={() => handleDeleteSentence(index, idx)}
+                      >
+                        x
+                      </div>
+                    </div>
+                  )) : null}
+                </div>
               </div>
               <div className="form-group">
                 <label htmlFor={`event-${index}-star`}>Star:</label>
-                <input
-                  type="number"
-                  id={`event-${index}-star`}
-                  value={event.star ?? ""}
-                  onChange={e => handleEventChange(index, 'star', parseInt(e.target.value))}
-                  autoComplete="off"
-                />
+                <div className="star-rating">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <span
+                      key={star}
+                      className={star <= (event.star || 0) ? 'star filled' : 'star'}
+                      onClick={() => handleStarClick(index, star)}
+                    >
+                      ★
+                    </span>
+                  ))}
+                </div>
               </div>
-
+              <div className="form-group">
+                <label htmlFor={`event-${index}-left-logo`}>Left Logo:</label>
+                <div className='img'>
+                  <img src={event.left.logo ? event.left.logo : swpPng} alt="" />
+                </div>
+                <input
+                  type="text"
+                  id={`event-${index}-left-logo`}
+                  value={event.left.logo}
+                  onChange={e => handleEventChange(index, 'left.logo', e.target.value)}
+                  autoComplete="off"
+                  onFocus={() => handleLogoFocus(index, 'left.logo')}
+                  onBlur={() => handleLogoBlur(index, 'left.logo')}
+                />
+                {logoSuggestions[`${index}-left.logo`]?.length > 0 && (
+                  <ul className="suggestions">
+                    {logoSuggestions[`${index}-left.logo`].map((suggestion, idx) => (
+                      <div className='imglink' key={idx}>
+                        <img src={suggestion} alt="" />
+                        <li
+                          onClick={() => handleLogoSuggestionClick(index, 'left.logo', suggestion)}
+                          className="suggestion-item"
+                        >
+                          {suggestion}
+                        </li>
+                      </div>
+                    ))}
+                  </ul>
+                )}
+              </div>
               <div className="form-group">
                 <label htmlFor={`event-${index}-left-name`}>Left Name:</label>
                 <input
@@ -283,27 +470,31 @@ function Json() {
                 />
               </div>
               <div className="form-group">
-                <label htmlFor={`event-${index}-left-logo`}>Left Logo:</label>
+                <label htmlFor={`event-${index}-right-logo`}>Right Logo:</label>
                 <div className='img'>
-                  <img src={event.left.logo} alt="" />
+                  <img src={event.right.logo ? event.right.logo : swpPng} alt="" />
                 </div>
                 <input
                   type="text"
-                  id={`event-${index}-left-logo`}
-                  value={event.left.logo}
-                  onChange={e => handleEventChange(index, 'left.logo', e.target.value)}
+                  id={`event-${index}-right-logo`}
+                  value={event.right.logo}
+                  onChange={e => handleEventChange(index, 'right.logo', e.target.value)}
                   autoComplete="off"
+                  onFocus={() => handleLogoFocus(index, 'right.logo')}
+                  onBlur={() => handleLogoBlur(index, 'right.logo')}
                 />
-                {logoSuggestions[`${index}-left.logo`]?.length > 0 && (
+                {logoSuggestions[`${index}-right.logo`]?.length > 0 && (
                   <ul className="suggestions">
-                    {logoSuggestions[`${index}-left.logo`].map((suggestion, idx) => (
-                      <li
-                        key={idx}
-                        onClick={() => handleLogoSuggestionClick(index, 'left.logo', suggestion)}
-                        className="suggestion-item"
-                      >
-                        {suggestion}
-                      </li>
+                    {logoSuggestions[`${index}-right.logo`].map((suggestion, idx) => (
+                      <div className='imglink' key={idx}>
+                        <img src={suggestion} alt="" />
+                        <li
+                          onClick={() => handleLogoSuggestionClick(index, 'right.logo', suggestion)}
+                          className="suggestion-item"
+                        >
+                          {suggestion}
+                        </li>
+                      </div>
                     ))}
                   </ul>
                 )}
@@ -317,32 +508,6 @@ function Json() {
                   onChange={e => handleEventChange(index, 'right.name', e.target.value)}
                   autoComplete="off"
                 />
-              </div>
-              <div className="form-group">
-                <label htmlFor={`event-${index}-right-logo`}>Right Logo:</label>
-                <div className='img'>
-                  <img src={event.right.logo} alt="" />
-                </div>
-                <input
-                  type="text"
-                  id={`event-${index}-right-logo`}
-                  value={event.right.logo}
-                  onChange={e => handleEventChange(index, 'right.logo', e.target.value)}
-                  autoComplete="off"
-                />
-                {logoSuggestions[`${index}-right.logo`]?.length > 0 && (
-                  <ul className="suggestions">
-                    {logoSuggestions[`${index}-right.logo`].map((suggestion, idx) => (
-                      <li
-                        key={idx}
-                        onClick={() => handleLogoSuggestionClick(index, 'right.logo', suggestion)}
-                        className="suggestion-item"
-                      >
-                        {suggestion}
-                      </li>
-                    ))}
-                  </ul>
-                )}
               </div>
             </div>
           ))}

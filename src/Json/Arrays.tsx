@@ -28,10 +28,10 @@ export const imageUrlArr = [
 export const LogoArr = [
   'https://cdn.zarlk.com/swipooor/images/events/event3/No.png',
   'https://cdn.zarlk.com/swipooor/images/events/event3/Yes.png',
-  'https://cdn.zarlk.com/swipooor/images/events/F1/MaxVerstappen.png',
-  'https://cdn.zarlk.com/swipooor/images/events/F1/LandoNorris.png',
   'https://cdn.zarlk.com/swipooor/images/events/event3/Under.png',
   'https://cdn.zarlk.com/swipooor/images/events/event3/Over.png',
+  'https://cdn.zarlk.com/swipooor/images/events/F1/MaxVerstappen.png',
+  'https://cdn.zarlk.com/swipooor/images/events/F1/LandoNorris.png',
   'https://cdn.zarlk.com/swipooor/images/events/event4/nba-logo/BOS.png',
   'https://cdn.zarlk.com/swipooor/images/events/event4/nba-logo/NYK.png',
   'https://cdn.zarlk.com/swipooor/images/events/event3/Even.png',
@@ -86,5 +86,4 @@ export const LogoArr = [
   'https://cdn.zarlk.com/swipooor/images/events/Bundesliga/BorrusiaDortmund.png',
   'https://cdn.zarlk.com/swipooor/images/events/F1/McLaren.png',
   'https://cdn.zarlk.com/swipooor/images/events/F1/RedBull.png',
-
 ];
