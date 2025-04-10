@@ -285,7 +285,7 @@ function Json() {
     <div className="app-container">
       <h1>JSON Editor</h1>
       <form>
-        <fieldset>
+        <fieldset className='fieldset1'>
           <legend>General Information</legend>
           <div className="form-group">
             <label htmlFor="group">Group:</label>
@@ -369,7 +369,7 @@ function Json() {
             />
           </div>
         </fieldset>
-        <fieldset>
+        <fieldset className='fieldset2'>
           <legend>Events</legend>
           {eventsData.map((event, index) => (
             <div key={index} className="event-container">
